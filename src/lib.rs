@@ -1,5 +1,9 @@
+#[cfg(not(target_os = "windows"))]
 mod fullbright;
+#[cfg(not(target_os = "windows"))]
 mod preloader;
+#[cfg(target_os = "windows")]
+mod windows;
 
 #[ctor::ctor]
 fn safe_setup() {
@@ -8,5 +12,6 @@ fn safe_setup() {
 }
 
 fn main() {
+    #[cfg(not(target_os = "windows"))]
     let _ = fullbright::patch_gfx_gamma();
 }

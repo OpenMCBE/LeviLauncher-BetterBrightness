@@ -7,9 +7,14 @@ jobs:
   build:
     strategy:
       matrix:
-        target:
-          - aarch64-linux-android
-    runs-on: ubuntu-latest
+        include:
+          - target: aarch64-linux-android
+            os: ubuntu-latest
+            artifact_name: libBetterBrightness.so
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            artifact_name: BetterBrightness.dll
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Rust
@@ -20,20 +25,24 @@ jobs:
           echo "version=$(rustc --version)" >> $GITHUB_OUTPUT
         shell: bash
       - name: Setup Docker Cache
+        if: runner.os == 'Linux'
         uses: ScribeMD/docker-cache@0.5.0
         with:
           key: docker-${{ runner.os }}-${{ steps.get-version.outputs.version }}-${{ matrix.target }}
       - name: Install cross-compilation tools
+        if: runner.os == 'Linux'
         uses: taiki-e/setup-cross-toolchain-action@v1
         with:
           target: ${{ matrix.target }}
+      - name: Add Windows Target
+        if: runner.os == 'Windows'
+        run: rustup target add ${{ matrix.target }}
       - name: Setup Cache
         uses: Swatinem/rust-cache@v2
       - name: build
-        run: cargo build --profile githubci
+        run: cargo build --profile githubci --target ${{ matrix.target }}
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: BetterBrightness-${{ matrix.target }}
-          path: target/${{ matrix.target }}/githubci/libBetterBrightness.so
-          
+          path: target/${{ matrix.target }}/githubci/${{ matrix.artifact_name }}

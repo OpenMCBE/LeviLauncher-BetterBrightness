@@ -68,7 +68,6 @@ macro_rules! hook_fn {
                     if !target.is_null() {
                         crate::preloader::pl_unhook(target, detour as *mut c_void);
                     } else {
-                        log::warn!("Cannot unhook: target address is null");
                     }
                 }
             }
